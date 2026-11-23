@@ -1,0 +1,68 @@
+# Lean configuration for local Minikube (3GB RAM)
+defaultRules:
+  create: true
+
+# Disable control-plane components not exposed by default in Minikube
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # Discover ServiceMonitors & PrometheusRules across all namespaces
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    retention: 2d
+    resources:
+      requests:
+        cpu: 100m
+        memory: 350Mi
+      limits:
+        cpu: 500m
+        memory: 750Mi
+
+grafana:
+  enabled: true
+  adminPassword: "admin"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 150Mi
+    limits:
+      cpu: 250m
+      memory: 350Mi
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 24Mi
+    limits:
+      cpu: 50m
+      memory: 48Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 96Mi

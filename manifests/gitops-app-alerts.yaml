@@ -1,0 +1,47 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gitops-app-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: gitops-app.rules
+      rules:
+        - alert: GitOpsAppReplicasDegraded
+          expr: |
+            kube_deployment_status_replicas_available{namespace="default", deployment="gitops-app-deployment"} < 2
+          for: 1m
+          labels:
+            severity: critical
+            service: gitops-app
+          annotations:
+            summary: "gitops-app available replicas below desired count (2)"
+            description: "Deployment gitops-app-deployment in namespace default has fewer than 2 available replicas for more than 1 minute."
+
+        - alert: GitOpsAppPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="default", pod=~"gitops-app-.*"}[15m]) > 0
+          for: 1m
+          labels:
+            severity: warning
+            service: gitops-app
+          annotations:
+            summary: "gitops-app pod container restarted"
+            description: "Pod {{ $labels.pod }} in namespace default restarted within the last 15 minutes."
+
+        - alert: GitOpsAppHighMemoryUsage
+          expr: |
+            (
+              sum(container_memory_working_set_bytes{namespace="default", pod=~"gitops-app-.*", container!=""}) by (pod)
+              /
+              sum(kube_pod_container_resource_limits{namespace="default", pod=~"gitops-app-.*", resource="memory"}) by (pod)
+            ) > 0.80
+          for: 2m
+          labels:
+            severity: warning
+            service: gitops-app
+          annotations:
+            summary: "gitops-app pod memory usage above 80% limit"
+            description: "Pod {{ $labels.pod }} is using over 80% of its memory limit."
